@@ -1,0 +1,132 @@
+//ARDUINO CHICKEN COOP  --using FreeRTOS 
+
+/*We want to do these three task at the same time every evening in with pushing a single button:
+
+Blinking LED inside of coop 
+
+Playing specific voice by a speaker
+
+Rotating a wheel to open the food container
+###########################################################################
+
+General methods to  train chickens to return to their coop:
+1-Turning a light on inside of the coop during the evening. Chickens are blind in the nights,
+  so they always prefer to find a light source.
+
+2- Russian physiologist Ivan Pavlov's Chicken Classical Conditioning study in 1908 proved that
+ chickens can be trained by voice and treats.
+
+ */
+#include <Arduino_FreeRTOS.h>
+#include <LiquidCrystal.h>
+
+
+// initialize the LCD library 
+LiquidCrystal lcd(1,2,4,5,6,7);
+
+
+
+void setup()
+
+{
+
+Serial.begin(9600);
+Serial.println(F("In Setup function"));
+//Set the digital pins 8 to 11 as digital output pins
+  pinMode(8,OUTPUT);
+  pinMode(9,OUTPUT);
+  pinMode(10,OUTPUT);
+  pinMode(11,OUTPUT);
+
+
+
+//Create three tasks with labels "Task1-- MOTOR", "Task2 --BUZZ" and "Task3 -- LCD"
+//Assigning the priority as 1, 2 and 3 respectively. 
+//We also create the fourth task labeled as IdelTask when there is no task in operation
+
+//In FreeRTOS we use "xTaskCreate" to create tasks and it has 5 parameters.
+
+ xTaskCreate(MyTask1, "Task1-- MOTOR", 100, NULL, 1, NULL);
+ xTaskCreate(MyTask2, "Task2 --BUZZ", 100, NULL, 2, NULL);
+ xTaskCreate(MyTask3, "Task3 -- LCD", 100, NULL, 3, NULL);
+ xTaskCreate(MyIdleTask, "IdleTask", 100, NULL, 0, NULL);}
+
+
+void loop()
+
+{
+
+
+//There is no instruction in the loop section of the code.
+// Because each task executes on interrupt after specified time
+
+}
+
+//Task1
+static void MyTask1(void* pvParameters)
+{
+ 
+  while(1)
+
+  { 
+    digitalWrite(8,HIGH);
+    digitalWrite(9,LOW); 
+    digitalWrite(10,LOW);
+    digitalWrite(11,LOW); 
+    Serial.println(F("Task1-- MOTOR"));   
+    vTaskDelay(7000/portTICK_PERIOD_MS);
+  }
+}
+
+//Task 2
+
+static void MyTask2(void* pvParameters)
+
+{  
+while(1)
+
+  { digitalWrite(8,LOW);
+    digitalWrite(9,HIGH); 
+    digitalWrite(10,LOW);
+    digitalWrite(11,LOW);   
+    Serial.println(F("Task2 --BUZZ"));
+    vTaskDelay(10000/portTICK_PERIOD_MS);
+  }
+}
+
+//Task 3
+
+static void MyTask3(void* pvParameters)
+{ 
+while(1)
+  { 
+   digitalWrite(8,LOW);
+   digitalWrite(9,LOW); 
+   digitalWrite(10,HIGH);
+   digitalWrite(11,LOW);
+   Serial.println(F("Task3 -- LCD"));
+   
+ // lcd.begin(16, 2);
+ // lcd.print("hello, world!");
+   vTaskDelay(3000/portTICK_PERIOD_MS);
+  }
+}
+
+//This is the idle task which has the lowest priority and calls when no task is running.
+
+static void MyIdleTask(void* pvParameters)
+
+{
+  
+  while(1)
+   { 
+    digitalWrite(8,LOW);
+    digitalWrite(9,LOW); 
+    digitalWrite(10,LOW);
+    digitalWrite(11,HIGH);
+    Serial.println(F("Idle state"));
+    delay(2000);
+        
+  
+  }  
+}
